@@ -1,3 +1,4 @@
+'''
 from bs4 import BeautifulSoup
 import urllib.request
 import urllib.parse
@@ -7,9 +8,12 @@ from telegram.ext import Updater
 from telegram.ext import Dispatcher
 from telegram.ext import CommandHandler
 
+import signal, os
 import logging
 
-computer_main = "https://computer.knu.ac.kr/main/index.html"
+import sqlite3
+import time
+
 global_notice = "https://computer.knu.ac.kr/06_sub/02_sub.html"
 bachelor_notice = "https://computer.knu.ac.kr/06_sub/02_sub_2.html"
 advanced_computer = "https://computer.knu.ac.kr/06_sub/02_sub_3.html"
@@ -17,9 +21,20 @@ global_software = "https://computer.knu.ac.kr/06_sub/02_sub_3.html"
 graduate_notice = "http://computer.knu.ac.kr/06_sub/02_sub_6.html"
 TOKEN = ""
 
+global_current = 0
+bachelor_current = 0
+advanced_computer_current = 0
+global_software_current = 0
+graduate_notice_current = 0
+
 # Execute when bot starts
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="This is KNU computer notice bot!")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="I will let you know when there's new notice!")
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="You can cancel subscription by typing \"/leave\" whenever you want")
+    add_user(update.effective_chat.id)
+    print(update.effective_chat.id)
 
 
 # read token from file
@@ -30,12 +45,35 @@ def get_token():
     return token
 
 
-def renew_db():
+def init_notice():
+    with urllib.request.urlopen(global_notice) as response:
+        html = response.read()
+        soup = BeautifulSoup(html, "html.parser")
+        global_current =
 
-# get source from web using urllib
-with urllib.request.urlopen(computer_main) as response:
-    html = response.read()
-    soup = BeautifulSoup(html, "html.parser")
+
+def update_notice():
+    with urllib.request.urlopen(global_notice) as response:
+        html = response.read()
+        soup = BeautifulSoup(html, "html.parser")
+
+
+def add_user(user):
+    f = open("user.txt", "w")
+    f.write(str(user) + "\n")
+    f.close()
+
+
+def leave(user):
+    f = open("user.txt", "r")
+    lines = f.readlines()
+    f.close()
+
+    f = open("user.txt", "w")
+    for line in lines:
+        if line.strip('\n') != str(user):
+            f.write(line)
+    f.close()
 
 
 if __name__ == "__main__":
@@ -47,11 +85,18 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
     start_handler = CommandHandler('start', start)
+    leave_handler = CommandHandler('leave', leave)
     dispatcher.add_handler(start_handler)
-
+    dispatcher.add_handler(leave_handler)
     updater.start_polling()
 
+    while(True):
+        if update_notice():
+            continue
+        else:
+            time.sleep(1800)
 '''
+
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
@@ -60,6 +105,13 @@ from bs4 import BeautifulSoup
 import sqlite3
 import telegram
 import time
+
+from telegram.ext import Updater
+from telegram.ext import Dispatcher
+from telegram.ext import CommandHandler
+
+import signal, os
+import logging
 
 # Database Diagram
 # CREATE TABLE announce (
@@ -73,6 +125,7 @@ import time
 # Execution Example
 # conn.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) VALUES (1, 'Paul', 32, 'California', 20000.00 )");
 
+
 URL = 'http://computer.knu.ac.kr/06_sub/02_sub.html'
 announcement_type = ""
 announcement_writer = ""
@@ -81,10 +134,40 @@ announcement_url = ""
 announcement_title = ""
 
 
-# telegram bot related information
-bot = telegram.Bot(token='1218776546:AAE1NAQoRGIR-i0nAl5LcMRiwYzYsUIfB-s')
-# bot.send_message(chat_id=-451140498, text="I'm sorry Dave I'm afraid I can't do that.")
+# read token from file
+def get_token():
+    f = open("token.txt", "r")
+    token = f.read()
+    f.close()
+    return token
 
+
+def start(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text="This is KNU computer notice bot!")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="I will let you know when there's new notice!")
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="You can cancel subscription by typing \"/leave\" whenever you want")
+    add_user(update.effective_chat.id)
+    print(update.effective_chat.id)
+
+
+def add_user(user):
+    f = open("user.txt", "a+")
+    f.write(str(user) + "\n")
+    f.close()
+
+
+def leave(update, context):
+    user = update.effective_chat.id
+    f = open("user.txt", "r")
+    lines = f.readlines()
+    f.close()
+
+    f = open("user.txt", "w")
+    for line in lines:
+        if line.strip('\n') != str(user):
+            f.write(line)
+    f.close()
 
 def RepresentsInt(s):
     try:
@@ -135,14 +218,18 @@ def get_announcement_feed(URL, conn, cur):
         for a in announcement.find_all('a', href=True):
             announce_url = str(a["href"])
             announcement_url = "http://computer.knu.ac.kr/06_sub/02_sub.html" + announce_url
-            announcement_title = str(a["title"])
+            announcement_title = str(a["title"]).replace("'", " ")
+
         print(announcement_url)
         print(announcement_title)
 
         # Initializing DB
         if insert_announcement_record(conn, cur, announcement_title, announcement_url, announcement_writer, announcement_date, announcement_type):
             message_query = "공지사항: \n" + "제목: " + announcement_title + "\n작성자: " + announcement_writer + "\n링크: " + announcement_url + "\n날짜: " + announcement_date
-            bot.send_message(chat_id=-451140498, text=message_query)
+            f = open("user.txt")
+            users = f.readlines()
+            for user in users:
+                bot.send_message(chat_id=user.strip('\n'), text=message_query)
 
 
 def connect_sqlite3(db_name):
@@ -177,8 +264,24 @@ def clean_up(conn, cur):
 
 
 if __name__ == "__main__":
+    TOKEN = get_token()
+    # telegram bot related information
+    bot = telegram.Bot(token=TOKEN)
+
     # Initializing the DB
     conn, cur = connect_sqlite3("announcement.db")
+
+    updater = Updater(token=TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
+
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+    start_handler = CommandHandler('start', start)
+    leave_handler = CommandHandler('leave', leave)
+    dispatcher.add_handler(start_handler)
+    dispatcher.add_handler(leave_handler)
+    updater.start_polling()
+
     while True:
         get_announcement_feed(URL, conn, cur)
         print("waiting for 1800 seconds")
@@ -186,4 +289,3 @@ if __name__ == "__main__":
     clean_up(conn, cur)
 
 
-'''
