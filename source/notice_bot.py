@@ -138,6 +138,7 @@ def get_announcement_feed(URL, conn, cur, selected):
             users = f.readlines()
             for user in users:
                 bot.send_message(chat_id=user.strip('\n'), text=message_query)
+                time.sleep(1)
 
 
 def connect_sqlite3(db_name):
