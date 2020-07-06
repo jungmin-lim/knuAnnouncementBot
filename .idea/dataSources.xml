@@ -7,5 +7,11 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/source/announcement.db</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="global_announcement" uuid="a47dd53d-8ded-4862-8648-2e04af8f1733">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/source/global_announcement.db</jdbc-url>
+    </data-source>
   </component>
 </project>

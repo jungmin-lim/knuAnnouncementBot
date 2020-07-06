@@ -26,8 +26,12 @@ import logging
 # Execution Example
 # conn.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) VALUES (1, 'Paul', 32, 'California', 20000.00 )");
 
-
 URL = 'http://computer.knu.ac.kr/06_sub/02_sub.html'
+bachelor_URL = 'http://computer.knu.ac.kr/06_sub/02_sub_2.html'
+advanced_computer_URL = 'http://computer.knu.ac.kr/06_sub/02_sub_3.html'
+global_software_URL = 'http://computer.knu.ac.kr/06_sub/02_sub_4.html'
+graduate_URL = 'http://computer.knu.ac.kr/06_sub/02_sub_6.html'
+
 announcement_type = ""
 announcement_writer = ""
 announcement_date = ""
@@ -78,7 +82,7 @@ def RepresentsInt(s):
         return 0
 
 
-def get_announcement_feed(URL, conn, cur):
+def get_announcement_feed(URL, conn, cur, selected):
     global announcement_title
     global announcement_writer
     global announcement_date
@@ -92,13 +96,16 @@ def get_announcement_feed(URL, conn, cur):
     tr = soup.findAll('table')[0].findAll('tr')
 
     for announcement in tr:
-        time.sleep(3)
+        time.sleep(1)
         bbs_num = str(announcement.find_all(attrs={'class': 'bbs_num'}))
         bbs_num = bbs_num.replace("</th>]", "")
         bbs_num = bbs_num.replace("</td>]", "")
         bbs_num = bbs_num.replace('[<th class="bbs_num">', "")
         bbs_num = bbs_num.replace('[<td class="bbs_num">', '')
         announcement_type = str(RepresentsInt(bbs_num))
+        if announcement_type == '0':
+            continue
+
         print(announcement_type)
 
         # bbs_writer
@@ -118,7 +125,7 @@ def get_announcement_feed(URL, conn, cur):
         # announcement_url and announcement_title
         for a in announcement.find_all('a', href=True):
             announce_url = str(a["href"])
-            announcement_url = "http://computer.knu.ac.kr/06_sub/02_sub.html" + announce_url
+            announcement_url = URL + announce_url
             announcement_title = str(a["title"]).replace("'", " ")
 
         print(announcement_url)
@@ -126,7 +133,7 @@ def get_announcement_feed(URL, conn, cur):
 
         # Initializing DB
         if insert_announcement_record(conn, cur, announcement_title, announcement_url, announcement_writer, announcement_date, announcement_type):
-            message_query = "공지사항: \n" + "제목: " + announcement_title + "\n작성자: " + announcement_writer + "\n링크: " + announcement_url + "\n날짜: " + announcement_date
+            message_query = selected + ": \n" + "제목: " + announcement_title + "\n작성자: " + announcement_writer + "\n링크: " + announcement_url + "\n날짜: " + announcement_date
             f = open("user.txt")
             users = f.readlines()
             for user in users:
@@ -171,8 +178,12 @@ if __name__ == "__main__":
 
     # Initializing the DB
     conn, cur = connect_sqlite3("announcement.db")
+    bachelor_conn, bachelor_cur = connect_sqlite3("bachelor_announcement.db")
+    advanced_conn, advanced_cur = connect_sqlite3("advanced_announcement.db")
+    global_conn, global_cur = connect_sqlite3("global_announcement.db")
+    graduate_conn, graduate_cur = connect_sqlite3("graduate_announcement.db")
 
-    updater = Updater(token=TOKEN, use_context=True)
+    updater = Updater(token=TOKEN, use_context=True, request_kwargs={'read_timeout': 6, 'connect_timeout': 7})
     dispatcher = updater.dispatcher
 
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -184,7 +195,11 @@ if __name__ == "__main__":
     updater.start_polling()
 
     while True:
-        get_announcement_feed(URL, conn, cur)
+        get_announcement_feed(URL, conn, cur, '전체 공지')
+        get_announcement_feed(bachelor_URL, bachelor_conn, bachelor_cur, '학사 공지')
+        get_announcement_feed(advanced_computer_URL, advanced_conn, advanced_cur, '심컴')
+        get_announcement_feed(global_software_URL, global_conn, global_cur, '글솝')
+        get_announcement_feed(graduate_URL, graduate_conn, graduate_cur, '대학원')
         print("waiting for 1800 seconds")
         time.sleep(1800)
     clean_up(conn, cur)
