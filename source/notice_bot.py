@@ -26,11 +26,11 @@ import logging
 # Execution Example
 # conn.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) VALUES (1, 'Paul', 32, 'California', 20000.00 )");
 
-URL = 'http://computer.knu.ac.kr/06_sub/02_sub.html'
-bachelor_URL = 'http://computer.knu.ac.kr/06_sub/02_sub_2.html'
-advanced_computer_URL = 'http://computer.knu.ac.kr/06_sub/02_sub_3.html'
-global_software_URL = 'http://computer.knu.ac.kr/06_sub/02_sub_4.html'
-graduate_URL = 'http://computer.knu.ac.kr/06_sub/02_sub_6.html'
+URL_1 = 'http://computer.knu.ac.kr/06_sub/02_sub.html'
+URL_2 = 'http://computer.knu.ac.kr/06_sub/02_sub_2.html'
+URL_3 = 'http://computer.knu.ac.kr/06_sub/02_sub_3.html'
+URL_4 = 'http://computer.knu.ac.kr/06_sub/02_sub_4.html'
+URL_5 = 'http://computer.knu.ac.kr/06_sub/02_sub_6.html'
 
 announcement_type = ""
 announcement_writer = ""
@@ -178,11 +178,11 @@ if __name__ == "__main__":
     bot = telegram.Bot(token=TOKEN)
 
     # Initializing the DB
-    conn, cur = connect_sqlite3("announcement.db")
-    bachelor_conn, bachelor_cur = connect_sqlite3("bachelor_announcement.db")
-    advanced_conn, advanced_cur = connect_sqlite3("advanced_announcement.db")
-    global_conn, global_cur = connect_sqlite3("global_announcement.db")
-    graduate_conn, graduate_cur = connect_sqlite3("graduate_announcement.db")
+    conn_1, cur_1 = connect_sqlite3("announcement_1.db")
+    conn_2, cur_2 = connect_sqlite3("announcement_2.db")
+    conn_3, cur_3 = connect_sqlite3("announcement_3.db")
+    conn_4, cur_4 = connect_sqlite3("announcement_4.db")
+    conn_5, cur_5 = connect_sqlite3("announcement_5.db")
 
     updater = Updater(token=TOKEN, use_context=True, request_kwargs={'read_timeout': 6, 'connect_timeout': 7})
     dispatcher = updater.dispatcher
@@ -196,11 +196,11 @@ if __name__ == "__main__":
     updater.start_polling()
 
     while True:
-        get_announcement_feed(URL, conn, cur, '전체 공지')
-        get_announcement_feed(bachelor_URL, bachelor_conn, bachelor_cur, '학사 공지')
-        get_announcement_feed(advanced_computer_URL, advanced_conn, advanced_cur, '심컴')
-        get_announcement_feed(global_software_URL, global_conn, global_cur, '글솝')
-        get_announcement_feed(graduate_URL, graduate_conn, graduate_cur, '대학원')
+        get_announcement_feed(URL_1, conn_1, cur_1, '전체 공지')
+        get_announcement_feed(URL_2, conn_2, cur_2, '학사 공지')
+        get_announcement_feed(URL_3, conn_3, cur_3, '심컴')
+        get_announcement_feed(URL_4, conn_4, cur_4, '글솝')
+        get_announcement_feed(URL_5, conn_5, cur_5, '대학원')
         print("waiting for 1800 seconds")
         time.sleep(1800)
     clean_up(conn, cur)
