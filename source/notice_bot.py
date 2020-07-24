@@ -12,6 +12,7 @@ from telegram.ext import Dispatcher
 from telegram.ext import CommandHandler
 
 import signal, os
+import os.path
 import logging
 
 # Database Diagram
@@ -57,20 +58,24 @@ def start(update, context):
 
 
 def add_user(user):
-    f = open("user.txt", "a+")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    USER = os.path.join(BASE_DIR, 'user.txt')
+    f = open(USER, "a+")
     f.write(str(user) + "\n")
     f.close()
 
 
 def leave(update, context):
-    user = update.effective_chat.id
-    f = open("user.txt", "r")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    USER = os.path.join(BASE_DIR, 'user.txt')
+    user_id = update.effective_chat.id
+    f = open(USER, "r")
     lines = f.readlines()
     f.close()
 
-    f = open("user.txt", "w")
+    f = open(USER, "w")
     for line in lines:
-        if line.strip('\n') != str(user):
+        if line.strip('\n') != str(user_id):
             f.write(line)
     f.close()
 
@@ -91,6 +96,9 @@ def get_announcement_feed(URL, conn, cur, selected):
     global announcement_type
     global bot
 
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    USER = os.path.join(BASE_DIR, 'user.txt')
+
     page = requests.get(URL)
     soup = BeautifulSoup(page.content, 'html.parser')
     tr = soup.findAll('table')[0].findAll('tr')
@@ -103,8 +111,6 @@ def get_announcement_feed(URL, conn, cur, selected):
         bbs_num = bbs_num.replace('[<th class="bbs_num">', "")
         bbs_num = bbs_num.replace('[<td class="bbs_num">', '')
         announcement_type = str(RepresentsInt(bbs_num))
-        if announcement_type == '0':
-            continue
 
         print(announcement_type)
 
@@ -134,7 +140,7 @@ def get_announcement_feed(URL, conn, cur, selected):
         # Initializing DB
         if insert_announcement_record(conn, cur, announcement_title, announcement_url, announcement_writer, announcement_date, announcement_type):
             message_query = selected + ": \n" + "제목: " + announcement_title + "\n작성자: " + announcement_writer + "\n링크: " + announcement_url + "\n날짜: " + announcement_date
-            f = open("user.txt")
+            f = open(USER)
             users = f.readlines()
             for user in users:
                 bot.send_message(chat_id=user.strip('\n'), text=message_query)
@@ -142,7 +148,9 @@ def get_announcement_feed(URL, conn, cur, selected):
 
 
 def connect_sqlite3(db_name):
-    conn = sqlite3.connect(db_name)
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(BASE_DIR, db_name)
+    conn = sqlite3.connect(db_path)
     print("Opened database successfully")
     cur = conn.cursor()
     return conn, cur
@@ -173,7 +181,7 @@ def clean_up(conn, cur):
 
 
 if __name__ == "__main__":
-    TOKEN = get_token()
+    TOKEN = '1038821852:AAEzoPsrJ2s0rXZPOX1_5p2Ym7NM867Mm3Y'
     # telegram bot related information
     bot = telegram.Bot(token=TOKEN)
 
