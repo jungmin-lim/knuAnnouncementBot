@@ -103,7 +103,7 @@ def get_announcement_feed(URL, conn, cur, selected):
     soup = BeautifulSoup(page.content, 'html.parser')
     tr = soup.findAll('table')[0].findAll('tr')
 
-    for announcement in tr:
+    for announcement in tr[1:]:
         time.sleep(1)
         bbs_num = str(announcement.find_all(attrs={'class': 'bbs_num'}))
         bbs_num = bbs_num.replace("</th>]", "")
@@ -186,11 +186,7 @@ if __name__ == "__main__":
     bot = telegram.Bot(token=TOKEN)
 
     # Initializing the DB
-    conn_1, cur_1 = connect_sqlite3("announcement_1.db")
-    conn_2, cur_2 = connect_sqlite3("announcement_2.db")
-    conn_3, cur_3 = connect_sqlite3("announcement_3.db")
-    conn_4, cur_4 = connect_sqlite3("announcement_4.db")
-    conn_5, cur_5 = connect_sqlite3("announcement_5.db")
+    conn, cur = connect_sqlite3("announcement.db")
 
     updater = Updater(token=TOKEN, use_context=True, request_kwargs={'read_timeout': 6, 'connect_timeout': 7})
     dispatcher = updater.dispatcher
@@ -204,11 +200,11 @@ if __name__ == "__main__":
     updater.start_polling()
 
     while True:
-        get_announcement_feed(URL_1, conn_1, cur_1, '전체 공지')
-        get_announcement_feed(URL_2, conn_2, cur_2, '학사 공지')
-        get_announcement_feed(URL_3, conn_3, cur_3, '심컴')
-        get_announcement_feed(URL_4, conn_4, cur_4, '글솝')
-        get_announcement_feed(URL_5, conn_5, cur_5, '대학원')
+        get_announcement_feed(URL_1, conn, cur, '전체 공지')
+        get_announcement_feed(URL_2, conn, cur, '학사 공지')
+        get_announcement_feed(URL_3, conn, cur, '심컴')
+        get_announcement_feed(URL_4, conn, cur, '글솝')
+        get_announcement_feed(URL_5, conn, cur, '대학원')
         print("waiting for 1800 seconds")
         time.sleep(1800)
     clean_up(conn, cur)
