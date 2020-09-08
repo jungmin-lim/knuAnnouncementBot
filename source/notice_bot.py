@@ -42,7 +42,9 @@ announcement_title = ""
 
 # read token from file
 def get_token():
-    f = open("token.txt", "r")
+	BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    TOKEN = os.path.join(BASE_DIR, 'token.txt')
+    f = open(TOKEN, "r")
     token = f.read()
     f.close()
     return token
@@ -181,7 +183,7 @@ def clean_up(conn, cur):
 
 
 if __name__ == "__main__":
-    TOKEN = '1038821852:AAEzoPsrJ2s0rXZPOX1_5p2Ym7NM867Mm3Y'
+    TOKEN = get_token() 
     # telegram bot related information
     bot = telegram.Bot(token=TOKEN)
 

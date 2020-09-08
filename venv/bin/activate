@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/jungmin/Documents/School/20201/hackerthon/venv"
+VIRTUAL_ENV="/root/knuAnnouncementBot/venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
