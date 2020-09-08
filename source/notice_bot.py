@@ -43,11 +43,12 @@ announcement_title = ""
 # read token from file
 def get_token():
 	BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    TOKEN = os.path.join(BASE_DIR, 'token.txt')
-    f = open(TOKEN, "r")
-    token = f.read()
-    f.close()
-    return token
+	TOKEN = os.path.join(BASE_DIR, 'token.txt')
+	f = open(TOKEN, "r")
+	token = f.read()
+	token.rstrip()
+	f.close()
+	return token
 
 
 def start(update, context):
@@ -183,9 +184,10 @@ def clean_up(conn, cur):
 
 
 if __name__ == "__main__":
-    TOKEN = get_token() 
+    TOKEN = '1038821852:AAEzoPsrJ2s0rXZPOX1_5p2Ym7NM867Mm3Y'
     # telegram bot related information
     bot = telegram.Bot(token=TOKEN)
+	
 
     # Initializing the DB
     conn, cur = connect_sqlite3("announcement.db")
