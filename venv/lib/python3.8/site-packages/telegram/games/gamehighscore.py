@@ -18,11 +18,20 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains an object that represents a Telegram GameHighScore."""
 
+from typing import TYPE_CHECKING, Optional
+
 from telegram import TelegramObject, User
+from telegram.utils.types import JSONDict
+
+if TYPE_CHECKING:
+    from telegram import Bot
 
 
 class GameHighScore(TelegramObject):
     """This object represents one row of the high scores table for a game.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`position`, :attr:`user` and :attr:`score` are equal.
 
     Attributes:
         position (:obj:`int`): Position in high score table for the game.
@@ -36,17 +45,19 @@ class GameHighScore(TelegramObject):
 
     """
 
-    def __init__(self, position, user, score):
+    def __init__(self, position: int, user: User, score: int):
         self.position = position
         self.user = user
         self.score = score
 
+        self._id_attrs = (self.position, self.user, self.score)
+
     @classmethod
-    def de_json(cls, data, bot):
+    def de_json(cls, data: Optional[JSONDict], bot: 'Bot') -> Optional['GameHighScore']:
+        data = cls.parse_data(data)
+
         if not data:
             return None
-
-        data = super().de_json(data, bot)
 
         data['user'] = User.de_json(data.get('user'), bot)
 

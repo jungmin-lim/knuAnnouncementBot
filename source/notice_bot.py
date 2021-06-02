@@ -52,8 +52,8 @@ def get_token():
 
 
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="This is KNU computer notice bot!")
-    context.bot.send_message(chat_id=update.effective_chat.id, text="I will let you know when there's new notice!")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="This is announcement bot KNU computer science department!")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="I will let you know when there's new announcement!")
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text="You can cancel subscription by typing \"/leave\" whenever you want")
     add_user(update.effective_chat.id)
@@ -143,10 +143,29 @@ def get_announcement_feed(URL, conn, cur, selected):
         # Initializing DB
         if insert_announcement_record(conn, cur, announcement_title, announcement_url, announcement_writer, announcement_date, announcement_type):
             message_query = selected + ": \n" + "제목: " + announcement_title + "\n작성자: " + announcement_writer + "\n링크: " + announcement_url + "\n날짜: " + announcement_date
-            f = open(USER)
+
+            f = open(USER, "r")
             users = f.readlines()
+            f.close()
+
             for user in users:
-                bot.send_message(chat_id=user.strip('\n'), text=message_query)
+                try:
+                    # send message
+                    bot.send_message(chat_id=user.strip('\n'), text=message_query)
+                except:
+                    # remove user if error while sending message
+                    f = open(USER, "r")
+                    lines = f.readlines()
+                    f.close()
+
+                    f = open(USER, "w")
+                    for line in lines:
+                        if line.strip("\n") != user.strip("\n"):
+                            f.write(line)
+                    f.close()
+
+                    print("deleted user {}".format(user))
+
                 time.sleep(1)
 
 

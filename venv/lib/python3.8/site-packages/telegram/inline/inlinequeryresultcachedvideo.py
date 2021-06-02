@@ -18,8 +18,13 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains the classes that represent Telegram InlineQueryResultCachedVideo."""
 
-from telegram import InlineQueryResult
-from telegram.utils.helpers import DEFAULT_NONE
+from typing import TYPE_CHECKING, Any, Union, Tuple, List
+
+from telegram import InlineQueryResult, MessageEntity
+from telegram.utils.helpers import DEFAULT_NONE, DefaultValue
+
+if TYPE_CHECKING:
+    from telegram import InputMessageContent, ReplyMarkup
 
 
 class InlineQueryResultCachedVideo(InlineQueryResult):
@@ -40,6 +45,9 @@ class InlineQueryResultCachedVideo(InlineQueryResult):
         parse_mode (:obj:`str`): Optional. Send Markdown or HTML, if you want Telegram apps to show
             bold, italic, fixed-width text or inline URLs in the media caption. See the constants
             in :class:`telegram.ParseMode` for the available modes.
+        caption_entities (List[:class:`telegram.MessageEntity`]): Optional. List of special
+            entities that appear in the caption, which can be specified instead of
+            :attr:`parse_mode`.
         reply_markup (:class:`telegram.InlineKeyboardMarkup`): Optional. Inline keyboard attached
             to the message.
         input_message_content (:class:`telegram.InputMessageContent`): Optional. Content of the
@@ -55,6 +63,9 @@ class InlineQueryResultCachedVideo(InlineQueryResult):
         parse_mode (:obj:`str`, optional): Send Markdown or HTML, if you want Telegram apps to show
             bold, italic, fixed-width text or inline URLs in the media caption. See the constants
             in :class:`telegram.ParseMode` for the available modes.
+        caption_entities (List[:class:`telegram.MessageEntity`], optional): List of special
+            entities that appear in the caption, which can be specified instead of
+            :attr:`parse_mode`.
         reply_markup (:class:`telegram.InlineKeyboardMarkup`, optional): Inline keyboard attached
             to the message.
         input_message_content (:class:`telegram.InputMessageContent`, optional): Content of the
@@ -63,16 +74,19 @@ class InlineQueryResultCachedVideo(InlineQueryResult):
 
     """
 
-    def __init__(self,
-                 id,
-                 video_file_id,
-                 title,
-                 description=None,
-                 caption=None,
-                 reply_markup=None,
-                 input_message_content=None,
-                 parse_mode=DEFAULT_NONE,
-                 **kwargs):
+    def __init__(
+        self,
+        id: str,  # pylint: disable=W0622
+        video_file_id: str,
+        title: str,
+        description: str = None,
+        caption: str = None,
+        reply_markup: 'ReplyMarkup' = None,
+        input_message_content: 'InputMessageContent' = None,
+        parse_mode: Union[str, DefaultValue] = DEFAULT_NONE,
+        caption_entities: Union[Tuple[MessageEntity, ...], List[MessageEntity]] = None,
+        **_kwargs: Any,
+    ):
         # Required
         super().__init__('video', id)
         self.video_file_id = video_file_id
@@ -82,5 +96,6 @@ class InlineQueryResultCachedVideo(InlineQueryResult):
         self.description = description
         self.caption = caption
         self.parse_mode = parse_mode
+        self.caption_entities = caption_entities
         self.reply_markup = reply_markup
         self.input_message_content = input_message_content

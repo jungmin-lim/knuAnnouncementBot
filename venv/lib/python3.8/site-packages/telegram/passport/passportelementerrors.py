@@ -16,7 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
+# pylint: disable=W0622
 """This module contains the classes that represent Telegram PassportElementError."""
+
+from typing import Any
 
 from telegram import TelegramObject
 
@@ -24,10 +27,13 @@ from telegram import TelegramObject
 class PassportElementError(TelegramObject):
     """Baseclass for the PassportElementError* classes.
 
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source` and  :attr:`type`  are equal.
+
     Attributes:
         source (:obj:`str`): Error source.
         type (:obj:`str`): The section of the user's Telegram Passport which has the error.
-        message (:obj:`str`): Error message
+        message (:obj:`str`): Error message.
 
     Args:
         source (:obj:`str`): Error source.
@@ -36,7 +42,7 @@ class PassportElementError(TelegramObject):
 
     """
 
-    def __init__(self, source, type, message, **kwargs):
+    def __init__(self, source: str, type: str, message: str, **_kwargs: Any):
         # Required
         self.source = str(source)
         self.type = str(type)
@@ -50,6 +56,10 @@ class PassportElementErrorDataField(PassportElementError):
     Represents an issue in one of the data fields that was provided by the user. The error is
     considered resolved when the field's value changes.
 
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source`, :attr:`type`, :attr:`field_name`, :attr:`data_hash`
+    and  :attr:`message`  are equal.
+
     Attributes:
         type (:obj:`str`): The section of the user's Telegram Passport which has the error, one of
             "personal_details", "passport", "driver_license", "identity_card", "internal_passport",
@@ -69,12 +79,7 @@ class PassportElementErrorDataField(PassportElementError):
 
     """
 
-    def __init__(self,
-                 type,
-                 field_name,
-                 data_hash,
-                 message,
-                 **kwargs):
+    def __init__(self, type: str, field_name: str, data_hash: str, message: str, **_kwargs: Any):
         # Required
         super().__init__('data', type, message)
         self.field_name = field_name
@@ -88,6 +93,10 @@ class PassportElementErrorFile(PassportElementError):
     Represents an issue with a document scan. The error is considered resolved when the file with
     the document scan changes.
 
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source`, :attr:`type`, :attr:`file_hash`, :attr:`data_hash`
+    and  :attr:`message`  are equal.
+
     Attributes:
         type (:obj:`str`): The section of the user's Telegram Passport which has the issue, one of
             "utility_bill", "bank_statement", "rental_agreement", "passport_registration",
@@ -105,11 +114,7 @@ class PassportElementErrorFile(PassportElementError):
 
     """
 
-    def __init__(self,
-                 type,
-                 file_hash,
-                 message,
-                 **kwargs):
+    def __init__(self, type: str, file_hash: str, message: str, **_kwargs: Any):
         # Required
         super().__init__('file', type, message)
         self.file_hash = file_hash
@@ -122,11 +127,15 @@ class PassportElementErrorFiles(PassportElementError):
     Represents an issue with a list of scans. The error is considered resolved when the file with
     the document scan changes.
 
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source`, :attr:`type`, :attr:`file_hashes`, :attr:`data_hash`
+    and  :attr:`message`  are equal.
+
     Attributes:
         type (:obj:`str`): The section of the user's Telegram Passport which has the issue, one of
             "utility_bill", "bank_statement", "rental_agreement", "passport_registration",
             "temporary_registration".
-        file_hash (:obj:`str`): Base64-encoded file hash.
+        file_hashes (List[:obj:`str`]): List of base64-encoded file hashes.
         message (:obj:`str`): Error message.
 
     Args:
@@ -139,23 +148,22 @@ class PassportElementErrorFiles(PassportElementError):
 
     """
 
-    def __init__(self,
-                 type,
-                 file_hashes,
-                 message,
-                 **kwargs):
+    def __init__(self, type: str, file_hashes: str, message: str, **_kwargs: Any):
         # Required
         super().__init__('files', type, message)
         self.file_hashes = file_hashes
 
-        self._id_attrs = ((self.source, self.type, self.message)
-                          + tuple([file_hash for file_hash in file_hashes]))
+        self._id_attrs = (self.source, self.type, self.message) + tuple(file_hashes)
 
 
 class PassportElementErrorFrontSide(PassportElementError):
     """
     Represents an issue with the front side of a document. The error is considered resolved when
     the file with the front side of the document changes.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source`, :attr:`type`, :attr:`file_hash`, :attr:`data_hash`
+    and  :attr:`message`  are equal.
 
     Attributes:
         type (:obj:`str`): The section of the user's Telegram Passport which has the issue, one of
@@ -174,11 +182,7 @@ class PassportElementErrorFrontSide(PassportElementError):
 
     """
 
-    def __init__(self,
-                 type,
-                 file_hash,
-                 message,
-                 **kwargs):
+    def __init__(self, type: str, file_hash: str, message: str, **_kwargs: Any):
         # Required
         super().__init__('front_side', type, message)
         self.file_hash = file_hash
@@ -190,6 +194,10 @@ class PassportElementErrorReverseSide(PassportElementError):
     """
     Represents an issue with the front side of a document. The error is considered resolved when
     the file with the reverse side of the document changes.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source`, :attr:`type`, :attr:`file_hash`, :attr:`data_hash`
+    and  :attr:`message`  are equal.
 
     Attributes:
         type (:obj:`str`): The section of the user's Telegram Passport which has the issue, one of
@@ -208,11 +216,7 @@ class PassportElementErrorReverseSide(PassportElementError):
 
     """
 
-    def __init__(self,
-                 type,
-                 file_hash,
-                 message,
-                 **kwargs):
+    def __init__(self, type: str, file_hash: str, message: str, **_kwargs: Any):
         # Required
         super().__init__('reverse_side', type, message)
         self.file_hash = file_hash
@@ -225,6 +229,10 @@ class PassportElementErrorSelfie(PassportElementError):
     Represents an issue with the selfie with a document. The error is considered resolved when
     the file with the selfie changes.
 
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source`, :attr:`type`, :attr:`file_hash`, :attr:`data_hash`
+    and  :attr:`message`  are equal.
+
     Attributes:
         type (:obj:`str`): The section of the user's Telegram Passport which has the issue, one of
             "passport", "driver_license", "identity_card", "internal_passport".
@@ -240,11 +248,7 @@ class PassportElementErrorSelfie(PassportElementError):
 
     """
 
-    def __init__(self,
-                 type,
-                 file_hash,
-                 message,
-                 **kwargs):
+    def __init__(self, type: str, file_hash: str, message: str, **_kwargs: Any):
         # Required
         super().__init__('selfie', type, message)
         self.file_hash = file_hash
@@ -257,6 +261,10 @@ class PassportElementErrorTranslationFile(PassportElementError):
     Represents an issue with one of the files that constitute the translation of a document.
     The error is considered resolved when the file changes.
 
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source`, :attr:`type`, :attr:`file_hash`, :attr:`data_hash`
+    and  :attr:`message`  are equal.
+
     Attributes:
         type (:obj:`str`): Type of element of the user's Telegram Passport which has the issue,
             one of "passport", "driver_license", "identity_card", "internal_passport",
@@ -276,11 +284,7 @@ class PassportElementErrorTranslationFile(PassportElementError):
 
     """
 
-    def __init__(self,
-                 type,
-                 file_hash,
-                 message,
-                 **kwargs):
+    def __init__(self, type: str, file_hash: str, message: str, **_kwargs: Any):
         # Required
         super().__init__('translation_file', type, message)
         self.file_hash = file_hash
@@ -293,12 +297,16 @@ class PassportElementErrorTranslationFiles(PassportElementError):
     Represents an issue with the translated version of a document. The error is considered
     resolved when a file with the document translation change.
 
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source`, :attr:`type`, :attr:`file_hashes`, :attr:`data_hash`
+    and  :attr:`message`  are equal.
+
     Attributes:
         type (:obj:`str`): Type of element of the user's Telegram Passport which has the issue,
             one of "passport", "driver_license", "identity_card", "internal_passport",
             "utility_bill", "bank_statement", "rental_agreement", "passport_registration",
             "temporary_registration"
-        file_hash (:obj:`str`): Base64-encoded file hash.
+        file_hashes (List[:obj:`str`]): List of base64-encoded file hashes.
         message (:obj:`str`): Error message.
 
     Args:
@@ -312,23 +320,22 @@ class PassportElementErrorTranslationFiles(PassportElementError):
 
     """
 
-    def __init__(self,
-                 type,
-                 file_hashes,
-                 message,
-                 **kwargs):
+    def __init__(self, type: str, file_hashes: str, message: str, **_kwargs: Any):
         # Required
         super().__init__('translation_files', type, message)
         self.file_hashes = file_hashes
 
-        self._id_attrs = ((self.source, self.type, self.message)
-                          + tuple([file_hash for file_hash in file_hashes]))
+        self._id_attrs = (self.source, self.type, self.message) + tuple(file_hashes)
 
 
 class PassportElementErrorUnspecified(PassportElementError):
     """
     Represents an issue in an unspecified place. The error is considered resolved when new
     data is added.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`source`, :attr:`type`, :attr:`element_hash`,
+    :attr:`data_hash` and  :attr:`message`  are equal.
 
     Attributes:
         type (:obj:`str`): Type of element of the user's Telegram Passport which has the issue.
@@ -343,11 +350,7 @@ class PassportElementErrorUnspecified(PassportElementError):
 
     """
 
-    def __init__(self,
-                 type,
-                 element_hash,
-                 message,
-                 **kwargs):
+    def __init__(self, type: str, element_hash: str, message: str, **_kwargs: Any):
         # Required
         super().__init__('unspecified', type, message)
         self.element_hash = element_hash

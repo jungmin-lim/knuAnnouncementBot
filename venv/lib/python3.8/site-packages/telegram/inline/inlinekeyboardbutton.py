@@ -18,11 +18,21 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains an object that represents a Telegram InlineKeyboardButton."""
 
+from typing import TYPE_CHECKING, Any
+
 from telegram import TelegramObject
+
+if TYPE_CHECKING:
+    from telegram import CallbackGame, LoginUrl
 
 
 class InlineKeyboardButton(TelegramObject):
     """This object represents one button of an inline keyboard.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`text`, :attr:`url`, :attr:`login_url`, :attr:`callback_data`,
+    :attr:`switch_inline_query`, :attr:`switch_inline_query_current_chat`, :attr:`callback_game`
+    and :attr:`pay` are equal.
 
     Note:
         You must use exactly one of the optional fields. Mind that :attr:`callback_game` is not
@@ -67,22 +77,24 @@ class InlineKeyboardButton(TelegramObject):
         callback_game (:class:`telegram.CallbackGame`, optional): Description of the game that will
             be launched when the user presses the button. This type of button must always be
             the ``first`` button in the first row.
-        pay (:obj:`bool`, optional): Specify True, to send a Pay button. This type of button must
-            always be the ``first`` button in the first row.
+        pay (:obj:`bool`, optional): Specify :obj:`True`, to send a Pay button. This type of button
+            must always be the ``first`` button in the first row.
         **kwargs (:obj:`dict`): Arbitrary keyword arguments.
 
     """
 
-    def __init__(self,
-                 text,
-                 url=None,
-                 callback_data=None,
-                 switch_inline_query=None,
-                 switch_inline_query_current_chat=None,
-                 callback_game=None,
-                 pay=None,
-                 login_url=None,
-                 **kwargs):
+    def __init__(
+        self,
+        text: str,
+        url: str = None,
+        callback_data: str = None,
+        switch_inline_query: str = None,
+        switch_inline_query_current_chat: str = None,
+        callback_game: 'CallbackGame' = None,
+        pay: bool = None,
+        login_url: 'LoginUrl' = None,
+        **_kwargs: Any,
+    ):
         # Required
         self.text = text
 
@@ -95,9 +107,13 @@ class InlineKeyboardButton(TelegramObject):
         self.callback_game = callback_game
         self.pay = pay
 
-    @classmethod
-    def de_json(cls, data, bot):
-        if not data:
-            return None
-
-        return cls(**data)
+        self._id_attrs = (
+            self.text,
+            self.url,
+            self.login_url,
+            self.callback_data,
+            self.switch_inline_query,
+            self.switch_inline_query_current_chat,
+            self.callback_game,
+            self.pay,
+        )

@@ -18,11 +18,17 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains an object that represents a Telegram ShippingAddress."""
 
+from typing import Any
+
 from telegram import TelegramObject
 
 
 class ShippingAddress(TelegramObject):
     """This object represents a Telegram ShippingAddress.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their  :attr:`country_code`, :attr:`state`, :attr:`city`,
+    :attr:`street_line1`, :attr:`street_line2` and :attr:`post_cod` are equal.
 
     Attributes:
         country_code (:obj:`str`): ISO 3166-1 alpha-2 country code.
@@ -43,7 +49,16 @@ class ShippingAddress(TelegramObject):
 
     """
 
-    def __init__(self, country_code, state, city, street_line1, street_line2, post_code, **kwargs):
+    def __init__(
+        self,
+        country_code: str,
+        state: str,
+        city: str,
+        street_line1: str,
+        street_line2: str,
+        post_code: str,
+        **_kwargs: Any,
+    ):
         self.country_code = country_code
         self.state = state
         self.city = city
@@ -51,12 +66,11 @@ class ShippingAddress(TelegramObject):
         self.street_line2 = street_line2
         self.post_code = post_code
 
-        self._id_attrs = (self.country_code, self.state, self.city, self.street_line1,
-                          self.street_line2, self.post_code)
-
-    @classmethod
-    def de_json(cls, data, bot):
-        if not data:
-            return None
-
-        return cls(**data)
+        self._id_attrs = (
+            self.country_code,
+            self.state,
+            self.city,
+            self.street_line1,
+            self.street_line2,
+            self.post_code,
+        )

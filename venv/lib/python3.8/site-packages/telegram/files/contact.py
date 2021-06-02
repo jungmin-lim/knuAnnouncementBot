@@ -18,11 +18,16 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains an object that represents a Telegram Contact."""
 
+from typing import Any
+
 from telegram import TelegramObject
 
 
 class Contact(TelegramObject):
     """This object represents a phone contact.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`phone_number` is equal.
 
     Attributes:
         phone_number (:obj:`str`): Contact's phone number.
@@ -41,8 +46,15 @@ class Contact(TelegramObject):
 
     """
 
-    def __init__(self, phone_number, first_name, last_name=None, user_id=None, vcard=None,
-                 **kwargs):
+    def __init__(
+        self,
+        phone_number: str,
+        first_name: str,
+        last_name: str = None,
+        user_id: int = None,
+        vcard: str = None,
+        **_kwargs: Any,
+    ):
         # Required
         self.phone_number = str(phone_number)
         self.first_name = first_name
@@ -52,10 +64,3 @@ class Contact(TelegramObject):
         self.vcard = vcard
 
         self._id_attrs = (self.phone_number,)
-
-    @classmethod
-    def de_json(cls, data, bot):
-        if not data:
-            return None
-
-        return cls(**data)

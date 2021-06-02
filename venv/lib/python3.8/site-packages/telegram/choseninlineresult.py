@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pylint: disable=R0902,R0912,R0913
+# pylint: disable=R0902,R0913
 #
 # A library that provides a Python interface to the Telegram Bot API
 # Copyright (C) 2015-2020
@@ -19,13 +19,22 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains an object that represents a Telegram ChosenInlineResult."""
 
-from telegram import TelegramObject, User, Location
+from typing import TYPE_CHECKING, Any, Optional
+
+from telegram import Location, TelegramObject, User
+from telegram.utils.types import JSONDict
+
+if TYPE_CHECKING:
+    from telegram import Bot
 
 
 class ChosenInlineResult(TelegramObject):
     """
     Represents a result of an inline query that was chosen by the user and sent to their chat
     partner.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`result_id` is equal.
 
     Note:
         In Python `from` is a reserved word, use `from_user` instead.
@@ -48,15 +57,21 @@ class ChosenInlineResult(TelegramObject):
         query (:obj:`str`): The query that was used to obtain the result.
         **kwargs (:obj:`dict`): Arbitrary keyword arguments.
 
+    Note:
+        It is necessary to enable inline feedback via `@Botfather <https://t.me/BotFather>`_ in
+        order to receive these objects in updates.
+
     """
 
-    def __init__(self,
-                 result_id,
-                 from_user,
-                 query,
-                 location=None,
-                 inline_message_id=None,
-                 **kwargs):
+    def __init__(
+        self,
+        result_id: str,
+        from_user: User,
+        query: str,
+        location: Location = None,
+        inline_message_id: str = None,
+        **_kwargs: Any,
+    ):
         # Required
         self.result_id = result_id
         self.from_user = from_user
@@ -68,11 +83,12 @@ class ChosenInlineResult(TelegramObject):
         self._id_attrs = (self.result_id,)
 
     @classmethod
-    def de_json(cls, data, bot):
+    def de_json(cls, data: Optional[JSONDict], bot: 'Bot') -> Optional['ChosenInlineResult']:
+        data = cls.parse_data(data)
+
         if not data:
             return None
 
-        data = super().de_json(data, bot)
         # Required
         data['from_user'] = User.de_json(data.pop('from'), bot)
         # Optionals

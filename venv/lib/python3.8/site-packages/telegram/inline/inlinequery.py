@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pylint: disable=R0902,R0912,R0913
+# pylint: disable=R0902,R0913
 #
 # A library that provides a Python interface to the Telegram Bot API
 # Copyright (C) 2015-2020
@@ -19,13 +19,22 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains an object that represents a Telegram InlineQuery."""
 
-from telegram import TelegramObject, User, Location
+from typing import TYPE_CHECKING, Any, Optional
+
+from telegram import Location, TelegramObject, User
+from telegram.utils.types import JSONDict
+
+if TYPE_CHECKING:
+    from telegram import Bot
 
 
 class InlineQuery(TelegramObject):
     """
     This object represents an incoming inline query. When the user sends an empty query, your bot
     could return some default or trending results.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`id` is equal.
 
     Note:
         * In Python `from` is a reserved word, use `from_user` instead.
@@ -50,9 +59,18 @@ class InlineQuery(TelegramObject):
 
     """
 
-    def __init__(self, id, from_user, query, offset, location=None, bot=None, **kwargs):
+    def __init__(
+        self,
+        id: str,  # pylint: disable=W0622
+        from_user: User,
+        query: str,
+        offset: str,
+        location: Location = None,
+        bot: 'Bot' = None,
+        **_kwargs: Any,
+    ):
         # Required
-        self.id = id
+        self.id = id  # pylint: disable=C0103
         self.from_user = from_user
         self.query = query
         self.offset = offset
@@ -64,8 +82,8 @@ class InlineQuery(TelegramObject):
         self._id_attrs = (self.id,)
 
     @classmethod
-    def de_json(cls, data, bot):
-        data = super().de_json(data, bot)
+    def de_json(cls, data: Optional[JSONDict], bot: 'Bot') -> Optional['InlineQuery']:
+        data = cls.parse_data(data)
 
         if not data:
             return None
@@ -75,19 +93,26 @@ class InlineQuery(TelegramObject):
 
         return cls(bot=bot, **data)
 
-    def answer(self, *args, **kwargs):
+    def answer(self, *args: Any, auto_pagination: bool = False, **kwargs: Any) -> bool:
         """Shortcut for::
 
-            bot.answer_inline_query(update.inline_query.id, *args, **kwargs)
+            bot.answer_inline_query(update.inline_query.id,
+                                    *args,
+                                    current_offset=self.offset if auto_pagination else None,
+                                    **kwargs)
 
         Args:
-            results (List[:class:`telegram.InlineQueryResult`]): A list of results for the inline
-                query.
+            results (List[:class:`telegram.InlineQueryResult`] | Callable): A list of results for
+                the inline query. In case :attr:`auto_pagination` is set to :obj:`True`,
+                ``results`` may also be a callable may also be a callable accepts the current page
+                index starting from 0. It must return either a list of
+                :class:`telegram.InlineResult` instances or :obj:`None` if there are no more
+                results.
             cache_time (:obj:`int`, optional): The maximum amount of time in seconds that the
                 result of the inline query may be cached on the server. Defaults to 300.
-            is_personal (:obj:`bool`, optional): Pass True, if results may be cached on the server
-                side only for the user that sent the query. By default, results may be returned to
-                any user who sends the same query.
+            is_personal (:obj:`bool`, optional): Pass :obj:`True`, if results may be cached on the
+                server side only for the user that sent the query. By default, results may be
+                returned to any user who sends the same query.
             next_offset (:obj:`str`, optional): Pass the offset that a client should send in the
                 next query with the same text to receive more results. Pass an empty string if
                 there are no more results or if you don't support pagination. Offset length can't
@@ -98,6 +123,11 @@ class InlineQuery(TelegramObject):
             switch_pm_parameter (:obj:`str`, optional): Deep-linking parameter for the /start
                 message sent to the bot when user presses the switch button. 1-64 characters,
                 only A-Z, a-z, 0-9, _ and - are allowed.
+            auto_pagination (:obj:`bool`, optional): If set to :obj:`True`, :attr:`offset` will be
+                passed as :attr:`current_offset` to :meth:telegram.Bot.answer_inline_query`.
+                Defaults to :obj:`False`.
 
         """
-        return self.bot.answer_inline_query(self.id, *args, **kwargs)
+        return self.bot.answer_inline_query(
+            self.id, *args, current_offset=self.offset if auto_pagination else None, **kwargs
+        )

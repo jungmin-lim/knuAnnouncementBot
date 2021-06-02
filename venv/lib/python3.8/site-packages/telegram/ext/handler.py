@@ -19,6 +19,17 @@
 """This module contains the base class for handlers as used by the Dispatcher."""
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, TypeVar, Union
+
+from telegram import Update
+from telegram.utils.promise import Promise
+from telegram.utils.types import HandlerArg
+from telegram.utils.helpers import DefaultValue, DEFAULT_FALSE
+
+if TYPE_CHECKING:
+    from telegram.ext import CallbackContext, Dispatcher
+
+RT = TypeVar('RT')
 
 
 class Handler(ABC):
@@ -34,6 +45,7 @@ class Handler(ABC):
             the callback function.
         pass_chat_data (:obj:`bool`): Determines whether ``chat_data`` will be passed to
             the callback function.
+        run_async (:obj:`bool`): Determines whether the callback will run asynchronously.
 
     Note:
         :attr:`pass_user_data` and :attr:`pass_chat_data` determine whether a ``dict`` you
@@ -44,6 +56,10 @@ class Handler(ABC):
         Note that this is DEPRECATED, and you should use context based callbacks. See
         https://git.io/fxJuV for more info.
 
+    Warning:
+        When setting ``run_async`` to :obj:`True`, you cannot rely on adding custom
+        attributes to :class:`telegram.ext.CallbackContext`. See its docs for more info.
+
     Args:
         callback (:obj:`callable`): The callback function for this handler. Will be called when
             :attr:`check_update` has determined that an update should be processed by this handler.
@@ -53,39 +69,45 @@ class Handler(ABC):
 
             The return value of the callback is usually ignored except for the special case of
             :class:`telegram.ext.ConversationHandler`.
-        pass_update_queue (:obj:`bool`, optional): If set to ``True``, a keyword argument called
+        pass_update_queue (:obj:`bool`, optional): If set to :obj:`True`, a keyword argument called
             ``update_queue`` will be passed to the callback function. It will be the ``Queue``
             instance used by the :class:`telegram.ext.Updater` and :class:`telegram.ext.Dispatcher`
-            that contains new updates which can be used to insert updates. Default is ``False``.
+            that contains new updates which can be used to insert updates. Default is :obj:`False`.
             DEPRECATED: Please switch to context based callbacks.
-        pass_job_queue (:obj:`bool`, optional): If set to ``True``, a keyword argument called
+        pass_job_queue (:obj:`bool`, optional): If set to :obj:`True`, a keyword argument called
             ``job_queue`` will be passed to the callback function. It will be a
             :class:`telegram.ext.JobQueue` instance created by the :class:`telegram.ext.Updater`
-            which can be used to schedule new jobs. Default is ``False``.
+            which can be used to schedule new jobs. Default is :obj:`False`.
             DEPRECATED: Please switch to context based callbacks.
-        pass_user_data (:obj:`bool`, optional): If set to ``True``, a keyword argument called
-            ``user_data`` will be passed to the callback function. Default is ``False``.
+        pass_user_data (:obj:`bool`, optional): If set to :obj:`True`, a keyword argument called
+            ``user_data`` will be passed to the callback function. Default is :obj:`False`.
             DEPRECATED: Please switch to context based callbacks.
-        pass_chat_data (:obj:`bool`, optional): If set to ``True``, a keyword argument called
-            ``chat_data`` will be passed to the callback function. Default is ``False``.
+        pass_chat_data (:obj:`bool`, optional): If set to :obj:`True`, a keyword argument called
+            ``chat_data`` will be passed to the callback function. Default is :obj:`False`.
             DEPRECATED: Please switch to context based callbacks.
+        run_async (:obj:`bool`): Determines whether the callback will run asynchronously.
+            Defaults to :obj:`False`.
 
     """
 
-    def __init__(self,
-                 callback,
-                 pass_update_queue=False,
-                 pass_job_queue=False,
-                 pass_user_data=False,
-                 pass_chat_data=False):
-        self.callback = callback
+    def __init__(
+        self,
+        callback: Callable[[HandlerArg, 'CallbackContext'], RT],
+        pass_update_queue: bool = False,
+        pass_job_queue: bool = False,
+        pass_user_data: bool = False,
+        pass_chat_data: bool = False,
+        run_async: Union[bool, DefaultValue] = DEFAULT_FALSE,
+    ):
+        self.callback: Callable[[HandlerArg, 'CallbackContext'], RT] = callback
         self.pass_update_queue = pass_update_queue
         self.pass_job_queue = pass_job_queue
         self.pass_user_data = pass_user_data
         self.pass_chat_data = pass_chat_data
+        self.run_async = run_async
 
     @abstractmethod
-    def check_update(self, update):
+    def check_update(self, update: HandlerArg) -> Optional[Union[bool, object]]:
         """
         This method is called to determine if an update should be handled by
         this handler instance. It should always be overridden.
@@ -94,34 +116,59 @@ class Handler(ABC):
             update (:obj:`str` | :class:`telegram.Update`): The update to be tested.
 
         Returns:
-            Either ``None`` or ``False`` if the update should not be handled. Otherwise an object
-            that will be passed to :attr:`handle_update` and :attr:`collect_additional_context`
-            when the update gets handled.
+            Either :obj:`None` or :obj:`False` if the update should not be handled. Otherwise an
+            object that will be passed to :meth:`handle_update` and
+            :meth:`collect_additional_context` when the update gets handled.
 
         """
 
-    def handle_update(self, update, dispatcher, check_result, context=None):
+    def handle_update(
+        self,
+        update: HandlerArg,
+        dispatcher: 'Dispatcher',
+        check_result: object,
+        context: 'CallbackContext' = None,
+    ) -> Union[RT, Promise]:
         """
         This method is called if it was determined that an update should indeed
-        be handled by this instance. Calls :attr:`self.callback` along with its respectful
+        be handled by this instance. Calls :attr:`callback` along with its respectful
         arguments. To work with the :class:`telegram.ext.ConversationHandler`, this method
-        returns the value returned from ``self.callback``.
+        returns the value returned from :attr:`callback`.
         Note that it can be overridden if needed by the subclassing handler.
 
         Args:
             update (:obj:`str` | :class:`telegram.Update`): The update to be handled.
             dispatcher (:class:`telegram.ext.Dispatcher`): The calling dispatcher.
-            check_result: The result from :attr:`check_update`.
+            check_result (:obj:`obj`): The result from :attr:`check_update`.
+            context (:class:`telegram.ext.CallbackContext`, optional): The context as provided by
+                the dispatcher.
 
         """
+        run_async = self.run_async
+        if self.run_async is DEFAULT_FALSE and dispatcher.bot.defaults:
+            if dispatcher.bot.defaults.run_async:
+                run_async = True
+
         if context:
             self.collect_additional_context(context, update, dispatcher, check_result)
+            if run_async:
+                return dispatcher.run_async(self.callback, update, context, update=update)
             return self.callback(update, context)
-        else:
-            optional_args = self.collect_optional_args(dispatcher, update, check_result)
-            return self.callback(dispatcher.bot, update, **optional_args)
 
-    def collect_additional_context(self, context, update, dispatcher, check_result):
+        optional_args = self.collect_optional_args(dispatcher, update, check_result)
+        if run_async:
+            return dispatcher.run_async(
+                self.callback, dispatcher.bot, update, update=update, **optional_args
+            )
+        return self.callback(dispatcher.bot, update, **optional_args)  # type: ignore
+
+    def collect_additional_context(
+        self,
+        context: 'CallbackContext',
+        update: HandlerArg,
+        dispatcher: 'Dispatcher',
+        check_result: Any,
+    ) -> None:
         """Prepares additional arguments for the context. Override if needed.
 
         Args:
@@ -131,9 +178,13 @@ class Handler(ABC):
             check_result: The result (return value) from :attr:`check_update`.
 
         """
-        pass
 
-    def collect_optional_args(self, dispatcher, update=None, check_result=None):
+    def collect_optional_args(
+        self,
+        dispatcher: 'Dispatcher',
+        update: HandlerArg = None,
+        check_result: Any = None,  # pylint: disable=W0613
+    ) -> Dict[str, Any]:
         """
         Prepares the optional arguments. If the handler has additional optional args,
         it should subclass this method, but remember to call this super method.
@@ -147,17 +198,21 @@ class Handler(ABC):
             check_result: The result from check_update
 
         """
-        optional_args = dict()
+        optional_args: Dict[str, Any] = dict()
 
         if self.pass_update_queue:
             optional_args['update_queue'] = dispatcher.update_queue
         if self.pass_job_queue:
             optional_args['job_queue'] = dispatcher.job_queue
-        if self.pass_user_data:
+        if self.pass_user_data and isinstance(update, Update):
             user = update.effective_user
-            optional_args['user_data'] = dispatcher.user_data[user.id if user else None]
-        if self.pass_chat_data:
+            optional_args['user_data'] = dispatcher.user_data[
+                user.id if user else None  # type: ignore[index]
+            ]
+        if self.pass_chat_data and isinstance(update, Update):
             chat = update.effective_chat
-            optional_args['chat_data'] = dispatcher.chat_data[chat.id if chat else None]
+            optional_args['chat_data'] = dispatcher.chat_data[
+                chat.id if chat else None  # type: ignore[index]
+            ]
 
         return optional_args

@@ -18,7 +18,12 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains the classes that represent Telegram InlineQueryResultArticle."""
 
+from typing import TYPE_CHECKING, Any
+
 from telegram import InlineQueryResult
+
+if TYPE_CHECKING:
+    from telegram import InputMessageContent, ReplyMarkup
 
 
 class InlineQueryResultArticle(InlineQueryResult):
@@ -33,8 +38,8 @@ class InlineQueryResultArticle(InlineQueryResult):
         reply_markup (:class:`telegram.ReplyMarkup`): Optional. Inline keyboard attached to
             the message.
         url (:obj:`str`): Optional. URL of the result.
-        hide_url (:obj:`bool`): Optional. Pass True, if you don't want the URL to be shown in the
-            message.
+        hide_url (:obj:`bool`): Optional. Pass :obj:`True`, if you don't want the URL to be shown
+            in the message.
         description (:obj:`str`): Optional. Short description of the result.
         thumb_url (:obj:`str`): Optional. Url of the thumbnail for the result.
         thumb_width (:obj:`int`): Optional. Thumbnail width.
@@ -48,8 +53,8 @@ class InlineQueryResultArticle(InlineQueryResult):
         reply_markup (:class:`telegram.ReplyMarkup`, optional): Inline keyboard attached to
             the message
         url (:obj:`str`, optional): URL of the result.
-        hide_url (:obj:`bool`, optional): Pass True, if you don't want the URL to be shown in the
-            message.
+        hide_url (:obj:`bool`, optional): Pass :obj:`True`, if you don't want the URL to be shown
+            in the message.
         description (:obj:`str`, optional): Short description of the result.
         thumb_url (:obj:`str`, optional): Url of the thumbnail for the result.
         thumb_width (:obj:`int`, optional): Thumbnail width.
@@ -58,18 +63,20 @@ class InlineQueryResultArticle(InlineQueryResult):
 
     """
 
-    def __init__(self,
-                 id,
-                 title,
-                 input_message_content,
-                 reply_markup=None,
-                 url=None,
-                 hide_url=None,
-                 description=None,
-                 thumb_url=None,
-                 thumb_width=None,
-                 thumb_height=None,
-                 **kwargs):
+    def __init__(
+        self,
+        id: str,  # pylint: disable=W0622
+        title: str,
+        input_message_content: 'InputMessageContent',
+        reply_markup: 'ReplyMarkup' = None,
+        url: str = None,
+        hide_url: bool = None,
+        description: str = None,
+        thumb_url: str = None,
+        thumb_width: int = None,
+        thumb_height: int = None,
+        **_kwargs: Any,
+    ):
 
         # Required
         super().__init__('article', id)

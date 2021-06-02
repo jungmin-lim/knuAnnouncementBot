@@ -18,7 +18,12 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains the classes that represent Telegram InlineQueryResultCachedSticker."""
 
+from typing import TYPE_CHECKING, Any
+
 from telegram import InlineQueryResult
+
+if TYPE_CHECKING:
+    from telegram import InputMessageContent, ReplyMarkup
 
 
 class InlineQueryResultCachedSticker(InlineQueryResult):
@@ -47,12 +52,14 @@ class InlineQueryResultCachedSticker(InlineQueryResult):
 
     """
 
-    def __init__(self,
-                 id,
-                 sticker_file_id,
-                 reply_markup=None,
-                 input_message_content=None,
-                 **kwargs):
+    def __init__(
+        self,
+        id: str,  # pylint: disable=W0622
+        sticker_file_id: str,
+        reply_markup: 'ReplyMarkup' = None,
+        input_message_content: 'InputMessageContent' = None,
+        **_kwargs: Any,
+    ):
         # Required
         super().__init__('sticker', id)
         self.sticker_file_id = sticker_file_id

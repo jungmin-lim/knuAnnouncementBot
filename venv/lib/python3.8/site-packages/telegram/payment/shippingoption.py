@@ -18,11 +18,20 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains an object that represents a Telegram ShippingOption."""
 
+from typing import TYPE_CHECKING, Any, List
+
 from telegram import TelegramObject
+from telegram.utils.types import JSONDict
+
+if TYPE_CHECKING:
+    from telegram import LabeledPrice  # noqa
 
 
 class ShippingOption(TelegramObject):
     """This object represents one shipping option.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`id` is equal.
 
     Attributes:
         id (:obj:`str`): Shipping option identifier.
@@ -37,14 +46,20 @@ class ShippingOption(TelegramObject):
 
     """
 
-    def __init__(self, id, title, prices, **kwargs):
-        self.id = id
+    def __init__(
+        self,
+        id: str,  # pylint: disable=W0622
+        title: str,
+        prices: List['LabeledPrice'],
+        **_kwargs: Any,
+    ):
+        self.id = id  # pylint: disable=C0103
         self.title = title
         self.prices = prices
 
         self._id_attrs = (self.id,)
 
-    def to_dict(self):
+    def to_dict(self) -> JSONDict:
         data = super().to_dict()
 
         data['prices'] = [p.to_dict() for p in self.prices]

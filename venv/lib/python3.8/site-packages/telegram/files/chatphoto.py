@@ -17,11 +17,20 @@
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains an object that represents a Telegram ChatPhoto."""
+from typing import TYPE_CHECKING, Any
+
 from telegram import TelegramObject
+
+if TYPE_CHECKING:
+    from telegram import Bot, File
 
 
 class ChatPhoto(TelegramObject):
     """This object represents a chat photo.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`small_file_unique_id` and :attr:`big_file_unique_id` are
+    equal.
 
     Attributes:
         small_file_id (:obj:`str`): File identifier of small (160x160) chat photo.
@@ -53,12 +62,15 @@ class ChatPhoto(TelegramObject):
 
     """
 
-    def __init__(self,
-                 small_file_id,
-                 small_file_unique_id,
-                 big_file_id,
-                 big_file_unique_id,
-                 bot=None, **kwargs):
+    def __init__(
+        self,
+        small_file_id: str,
+        small_file_unique_id: str,
+        big_file_id: str,
+        big_file_unique_id: str,
+        bot: 'Bot' = None,
+        **_kwargs: Any,
+    ):
         self.small_file_id = small_file_id
         self.small_file_unique_id = small_file_unique_id
         self.big_file_id = big_file_id
@@ -66,16 +78,12 @@ class ChatPhoto(TelegramObject):
 
         self.bot = bot
 
-        self._id_attrs = (self.small_file_unique_id, self.big_file_unique_id,)
+        self._id_attrs = (
+            self.small_file_unique_id,
+            self.big_file_unique_id,
+        )
 
-    @classmethod
-    def de_json(cls, data, bot):
-        if not data:
-            return None
-
-        return cls(bot=bot, **data)
-
-    def get_small_file(self, timeout=None, **kwargs):
+    def get_small_file(self, timeout: int = None, **kwargs: Any) -> 'File':
         """Convenience wrapper over :attr:`telegram.Bot.get_file` for getting the
         small (160x160) chat photo
 
@@ -83,7 +91,8 @@ class ChatPhoto(TelegramObject):
             timeout (:obj:`int` | :obj:`float`, optional): If this value is specified, use it as
                 the read timeout from the server (instead of the one specified during creation of
                 the connection pool).
-            **kwargs (:obj:`dict`): Arbitrary keyword arguments.
+            api_kwargs (:obj:`dict`, optional): Arbitrary keyword arguments to be passed to the
+                Telegram API.
 
         Returns:
             :class:`telegram.File`
@@ -94,7 +103,7 @@ class ChatPhoto(TelegramObject):
         """
         return self.bot.get_file(self.small_file_id, timeout=timeout, **kwargs)
 
-    def get_big_file(self, timeout=None, **kwargs):
+    def get_big_file(self, timeout: int = None, **kwargs: Any) -> 'File':
         """Convenience wrapper over :attr:`telegram.Bot.get_file` for getting the
         big (640x640) chat photo
 
@@ -102,7 +111,8 @@ class ChatPhoto(TelegramObject):
             timeout (:obj:`int` | :obj:`float`, optional): If this value is specified, use it as
                 the read timeout from the server (instead of the one specified during creation of
                 the connection pool).
-            **kwargs (:obj:`dict`): Arbitrary keyword arguments.
+            api_kwargs (:obj:`dict`, optional): Arbitrary keyword arguments to be passed to the
+                Telegram API.
 
         Returns:
             :class:`telegram.File`

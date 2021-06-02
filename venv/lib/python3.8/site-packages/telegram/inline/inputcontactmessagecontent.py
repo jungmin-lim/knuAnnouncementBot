@@ -18,11 +18,16 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains the classes that represent Telegram InputContactMessageContent."""
 
+from typing import Any
+
 from telegram import InputMessageContent
 
 
 class InputContactMessageContent(InputMessageContent):
     """Represents the content of a contact message to be sent as the result of an inline query.
+
+    Objects of this class are comparable in terms of equality. Two objects of this class are
+    considered equal, if their :attr:`phone_number` is equal.
 
     Attributes:
         phone_number (:obj:`str`): Contact's phone number.
@@ -41,10 +46,19 @@ class InputContactMessageContent(InputMessageContent):
 
     """
 
-    def __init__(self, phone_number, first_name, last_name=None, vcard=None, **kwargs):
+    def __init__(
+        self,
+        phone_number: str,
+        first_name: str,
+        last_name: str = None,
+        vcard: str = None,
+        **_kwargs: Any,
+    ):
         # Required
         self.phone_number = phone_number
         self.first_name = first_name
         # Optionals
         self.last_name = last_name
         self.vcard = vcard
+
+        self._id_attrs = (self.phone_number,)

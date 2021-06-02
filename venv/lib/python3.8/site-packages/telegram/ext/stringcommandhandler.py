@@ -18,7 +18,17 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains the StringCommandHandler class."""
 
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, TypeVar, Union
+
+from telegram.utils.types import HandlerArg
+from telegram.utils.helpers import DefaultValue, DEFAULT_FALSE
+
 from .handler import Handler
+
+if TYPE_CHECKING:
+    from telegram.ext import CallbackContext, Dispatcher
+
+RT = TypeVar('RT')
 
 
 class StringCommandHandler(Handler):
@@ -27,6 +37,10 @@ class StringCommandHandler(Handler):
     Note:
         This handler is not used to handle Telegram :attr:`telegram.Update`, but strings manually
         put in the queue. For example to send messages with the bot using command line or API.
+
+    Warning:
+        When setting ``run_async`` to :obj:`True`, you cannot rely on adding custom
+        attributes to :class:`telegram.ext.CallbackContext`. See its docs for more info.
 
     Attributes:
         command (:obj:`str`): The command this handler should listen for.
@@ -37,8 +51,10 @@ class StringCommandHandler(Handler):
             passed to the callback function.
         pass_job_queue (:obj:`bool`): Determines whether ``job_queue`` will be passed to
             the callback function.
+        run_async (:obj:`bool`): Determines whether the callback will run asynchronously.
 
     Args:
+        command (:obj:`str`): The command this handler should listen for.
         callback (:obj:`callable`): The callback function for this handler. Will be called when
             :attr:`check_update` has determined that an update should be processed by this handler.
             Callback signature for context based API:
@@ -50,35 +66,42 @@ class StringCommandHandler(Handler):
         pass_args (:obj:`bool`, optional): Determines whether the handler should be passed the
             arguments passed to the command as a keyword argument called ``args``. It will contain
             a list of strings, which is the text following the command split on single or
-            consecutive whitespace characters. Default is ``False``
+            consecutive whitespace characters. Default is :obj:`False`
             DEPRECATED: Please switch to context based callbacks.
-        pass_update_queue (:obj:`bool`, optional): If set to ``True``, a keyword argument called
+        pass_update_queue (:obj:`bool`, optional): If set to :obj:`True`, a keyword argument called
             ``update_queue`` will be passed to the callback function. It will be the ``Queue``
             instance used by the :class:`telegram.ext.Updater` and :class:`telegram.ext.Dispatcher`
-            that contains new updates which can be used to insert updates. Default is ``False``.
+            that contains new updates which can be used to insert updates. Default is :obj:`False`.
             DEPRECATED: Please switch to context based callbacks.
-        pass_job_queue (:obj:`bool`, optional): If set to ``True``, a keyword argument called
+        pass_job_queue (:obj:`bool`, optional): If set to :obj:`True`, a keyword argument called
             ``job_queue`` will be passed to the callback function. It will be a
             class:`telegram.ext.JobQueue` instance created by the :class:`telegram.ext.Updater`
-            which can be used to schedule new jobs. Default is ``False``.
+            which can be used to schedule new jobs. Default is :obj:`False`.
             DEPRECATED: Please switch to context based callbacks.
+        run_async (:obj:`bool`): Determines whether the callback will run asynchronously.
+            Defaults to :obj:`False`.
 
     """
 
-    def __init__(self,
-                 command,
-                 callback,
-                 pass_args=False,
-                 pass_update_queue=False,
-                 pass_job_queue=False):
+    def __init__(
+        self,
+        command: str,
+        callback: Callable[[HandlerArg, 'CallbackContext'], RT],
+        pass_args: bool = False,
+        pass_update_queue: bool = False,
+        pass_job_queue: bool = False,
+        run_async: Union[bool, DefaultValue] = DEFAULT_FALSE,
+    ):
         super().__init__(
             callback,
             pass_update_queue=pass_update_queue,
-            pass_job_queue=pass_job_queue)
+            pass_job_queue=pass_job_queue,
+            run_async=run_async,
+        )
         self.command = command
         self.pass_args = pass_args
 
-    def check_update(self, update):
+    def check_update(self, update: HandlerArg) -> Optional[List[str]]:
         """Determines whether an update should be passed to this handlers :attr:`callback`.
 
         Args:
@@ -92,12 +115,24 @@ class StringCommandHandler(Handler):
             args = update[1:].split(' ')
             if args[0] == self.command:
                 return args[1:]
+        return None
 
-    def collect_optional_args(self, dispatcher, update=None, check_result=None):
+    def collect_optional_args(
+        self,
+        dispatcher: 'Dispatcher',
+        update: HandlerArg = None,
+        check_result: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         optional_args = super().collect_optional_args(dispatcher, update, check_result)
         if self.pass_args:
             optional_args['args'] = check_result
         return optional_args
 
-    def collect_additional_context(self, context, update, dispatcher, check_result):
+    def collect_additional_context(
+        self,
+        context: 'CallbackContext',
+        update: HandlerArg,
+        dispatcher: 'Dispatcher',
+        check_result: Optional[List[str]],
+    ) -> None:
         context.args = check_result
